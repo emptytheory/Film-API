@@ -21,15 +21,15 @@ namespace Film_API.Data.Entities
         public string Director { get; set; }
 
 
-        public string Picture { get; set; }
+        public string? Picture { get; set; }
 
 
-        public string Trailer { get; set; }
+        public string? Trailer { get; set; }
 
-        public int FranchiseId { get; set; }
+        public int? FranchiseId { get; set; }
 
         // Navigation
-        public Franchise Franchise { get; set; }
+        public Franchise? Franchise { get; set; }
         public HashSet<Character> Characters { get; set; }
     }
 }
