@@ -17,10 +17,10 @@ namespace Film_API.Data.Entities
         [StringLength(50)]
         public string Director { get; set; }
 
-        [StringLength(50)]
+
         public string Picture { get; set; }
 
-        [StringLength(50)]
+
         public string Trailer { get; set; }
     }
 }
