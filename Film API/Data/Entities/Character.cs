@@ -1,7 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Film_API.Data.Entities
 {
+    [Table(nameof(Character))]
+
     public class Character
     {
         public int Id {  get; set; }
@@ -16,5 +19,8 @@ namespace Film_API.Data.Entities
         public string? Gender { get; set; }
 
         public string? Picture { get; set; }
+
+        // Navigation
+        public HashSet<Movie> Movies { get; set; }
     }
 }
