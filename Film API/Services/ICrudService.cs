@@ -2,11 +2,16 @@
 {
     public interface ICrudService<T, TKey>
     {
-        ICollection<T> GettAll();
-        T GetById(TKey id);
-        T Save(T entity);
-        T Update(T entity);
-        void Delete(TKey id);
+        Task<ICollection<T>> GetAllAsync();
+        /// <summary>
+        /// Gets a <typeparamref name="T"/> by id.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        Task<T> GetByIdAsync(TKey id);
+        Task<T> AddAsync(T entity);
+        Task<T> UpdateAsync(T entity);
+        Task DeleteByIdAsync(TKey id);
 
     }
 }
