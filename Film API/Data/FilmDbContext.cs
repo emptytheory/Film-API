@@ -13,10 +13,8 @@ namespace Film_API.Data
         public DbSet<Movie> Movies { get; set; }
         public DbSet<Character> Characters { get; set; }
         public DbSet<Franchise> Franshises { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        public FilmDbContext(DbContextOptions options) : base(options)
         {
-            optionsBuilder.UseSqlServer("Data Source = N-NO-01-01-5770\\SQLEXPRESS; Initial Catalog = Film; Integrated Security = true; Trust Server Certificate = true;");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
