@@ -4,5 +4,6 @@ namespace Film_API.Services.Franchises
 {
     public interface IFranchiseService : ICrudService<Franchise, int>
     {
+        Franchise UpdateMovies(int[] movieIds, int franchiseId);
     }
 }
