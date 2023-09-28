@@ -15,14 +15,21 @@ namespace Film_API.Services.Movies
             _context = context;
         }
 
-        public Task<Movie> AddAsync(Movie entity)
+        public async Task<Movie> AddAsync(Movie movie)
         {
-            throw new NotImplementedException();
+            await _context.Movies.AddAsync(movie);
+            await _context.SaveChangesAsync();
+            return movie;
         }
 
         public async Task DeleteByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            Movie? movie = await _context.Movies.FindAsync(id);
+            if (movie == null)
+                throw new EntityNotFoundException(nameof(Movie), id);
+
+            _context.Movies.Remove(movie);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<ICollection<Movie>> GetAllAsync()
@@ -38,7 +45,9 @@ namespace Film_API.Services.Movies
         /// <exception cref="EntityNotFoundException"></exception>
         public async Task<Movie> GetByIdAsync(int id)
         {
-            var movie = await _context.Movies.FindAsync(id);
+            var movie = await _context.Movies
+                .Include(m => m.Characters)
+                .FirstOrDefaultAsync(m => m.Id == id);
 
             if (movie is null)
                 throw new EntityNotFoundException(nameof(Movie), id);
@@ -59,6 +68,11 @@ namespace Film_API.Services.Movies
         public Movie UpdateCharacters(int[] characterIds, int movieId)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<Character[]> GetCharacterArrayFromIdArray(int[] idArray) 
+        {
+            return await _context.Characters.Where(c => idArray.Contains(c.Id)).ToArrayAsync();
         }
     }
 }
