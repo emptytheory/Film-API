@@ -12,7 +12,7 @@ namespace Film_API.Data
 
         public DbSet<Movie> Movies { get; set; }
         public DbSet<Character> Characters { get; set; }
-        public DbSet<Franchise> Franshises { get; set; }
+        public DbSet<Franchise> Franchises { get; set; }
         public FilmDbContext(DbContextOptions options) : base(options)
         {
         }
@@ -21,7 +21,7 @@ namespace Film_API.Data
         {
             Movie movie1 = new() { Id = 1, Title = "Planet of the Cakes", Genre = "Sci-fi, Cooking", ReleaseYear = 1999, Director = "Julius Cream" };
             Movie movie2 = new() { Id = 2, Title = "King Thong", Genre = "Adventure, Adult", ReleaseYear = 2020, Director = "Fran-Sisqó Ford Copulate" };
-            Movie movie3 = new() { Id = 3, Title = "Codzilla", Genre = "Fishing, Action", ReleaseYear = 1988, Director = "Salmal Fisher" };
+            Movie movie3 = new() { Id = 3, Title = "Codzilla", Genre = "Fishing, Action", ReleaseYear = 1988, Director = "Salman Fisher" };
 
             Character character1 = new() { Id = 1, FullName = "Ethan Food" };
             Character character2 = new() { Id = 2, FullName = "Ace O. Bass", Alias = "Ass of Bass" };
