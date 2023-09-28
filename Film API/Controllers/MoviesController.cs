@@ -60,7 +60,8 @@ namespace Film_API.Controllers
                                    movie.Director, 
                                    movie.Picture, 
                                    movie.Trailer, 
-                                   movie.FranchiseId);
+                                   movie.FranchiseId,
+                                   movie.Characters.Select(c => c.Id).ToArray());
 
                 return Ok(dto);
             }
@@ -74,30 +75,34 @@ namespace Film_API.Controllers
         // PUT: api/Movies/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutMovie(int id, Movie movie)
+        public async Task<IActionResult> PutMovie(int id, MoviePutDTO dto)
         {
-            //if (id != movie.Id)
-            //{
-            //    return BadRequest();
-            //}
+            if (id != dto.Id)
+                return BadRequest("Id in path does not match id in body.");
 
-            //_context.Entry(movie).State = EntityState.Modified;
+            try
+            {
+                Movie movie = await _movieService.GetByIdAsync(id);
 
-            //try
-            //{
-            //    await _context.SaveChangesAsync();
-            //}
-            //catch (DbUpdateConcurrencyException)
-            //{
-            //    if (!MovieExists(id))
-            //    {
-            //        return NotFound();
-            //    }
-            //    else
-            //    {
-            //        throw;
-            //    }
-            //}
+                // Replace with AutoMapper
+                movie.Title = dto.Title;
+                movie.Genre = dto.Genre;
+                movie.ReleaseYear = dto.ReleaseYear;
+                movie.Director = dto.Director;
+                movie.Picture = dto.Picture;
+                movie.Trailer = dto.Trailer;
+                movie.FranchiseId = dto.FranchiseId;
+
+                await _movieService.UpdateAsync(movie);
+            }
+            catch (EntityNotFoundException Ex)
+            {
+                return NotFound(Ex.Message);
+            }
+            catch (NoEffectUpdateException Ex)
+            {
+                return StatusCode(204, Ex.Message);
+            }
 
             return NoContent();
         }

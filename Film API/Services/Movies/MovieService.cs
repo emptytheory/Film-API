@@ -20,7 +20,7 @@ namespace Film_API.Services.Movies
             throw new NotImplementedException();
         }
 
-        public Task DeleteByIdAsync(int id)
+        public async Task DeleteByIdAsync(int id)
         {
             throw new NotImplementedException();
         }
@@ -46,9 +46,14 @@ namespace Film_API.Services.Movies
             return movie;
         }
 
-        public Task<Movie> UpdateAsync(Movie entity)
+        public async Task<Movie> UpdateAsync(Movie movie)
         {
-            throw new NotImplementedException();
+            _context.Entry(movie).State = EntityState.Modified;
+            
+            if (_context.SaveChanges() <= 0)
+                throw new NoEffectUpdateException(nameof(Movie), movie.Id);
+
+            return movie;
         }
 
         public Movie UpdateCharacters(int[] characterIds, int movieId)
