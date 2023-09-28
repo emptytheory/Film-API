@@ -11,6 +11,7 @@ using Film_API.Services.Movies;
 using Film_API.Data.Exceptions;
 using Film_API.Data.DTOs.Movie;
 using System.Net.Mime;
+using AutoMapper;
 
 namespace Film_API.Controllers
 {
@@ -22,10 +23,12 @@ namespace Film_API.Controllers
     public class MoviesController : ControllerBase
     {
         private readonly IMovieService _movieService;
+        private readonly IMapper _mapper;
 
-        public MoviesController(IMovieService movieService)
+        public MoviesController(IMovieService movieService, IMapper mapper)
         {
             _movieService = movieService;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -36,8 +39,10 @@ namespace Film_API.Controllers
         public async Task<ActionResult<IEnumerable<MovieBriefDTO>>> GetMovies()
         {
             var movieList = await _movieService.GetAllAsync();
-            // Replace with AutoMapper
-            return Ok(movieList.Select(movie => new MovieBriefDTO(movie.Id, movie.Title)));
+
+            var dtoList = _mapper.Map<IEnumerable<MovieBriefDTO>>(movieList);
+
+            return Ok(dtoList);
         }
 
         /// <summary>
@@ -52,16 +57,7 @@ namespace Film_API.Controllers
             {
                 Movie movie = await _movieService.GetByIdAsync(id);
 
-                // Replace with AutoMapper
-                MovieDetailDTO dto = new(movie.Id, 
-                                   movie.Title, 
-                                   movie.Genre, 
-                                   movie.ReleaseYear, 
-                                   movie.Director, 
-                                   movie.Picture, 
-                                   movie.Trailer, 
-                                   movie.FranchiseId,
-                                   movie.Characters.Select(c => c.Id).ToArray());
+                MovieDetailDTO dto = _mapper.Map<MovieDetailDTO>(movie);
 
                 return Ok(dto);
             }
@@ -72,8 +68,13 @@ namespace Film_API.Controllers
  
         }
 
-        // PUT: api/Movies/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        /// <summary>
+        /// Updates the movie with the given id with data from the given DTO.
+        /// Does nothing if no movie has the given id.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="dto"></param>
+        /// <returns></returns>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutMovie(int id, MoviePutDTO dto)
         {
@@ -84,14 +85,7 @@ namespace Film_API.Controllers
             {
                 Movie movie = await _movieService.GetByIdAsync(id);
 
-                // Replace with AutoMapper
-                movie.Title = dto.Title;
-                movie.Genre = dto.Genre;
-                movie.ReleaseYear = dto.ReleaseYear;
-                movie.Director = dto.Director;
-                movie.Picture = dto.Picture;
-                movie.Trailer = dto.Trailer;
-                movie.FranchiseId = dto.FranchiseId;
+                _mapper.Map(dto, movie);
 
                 await _movieService.UpdateAsync(movie);
             }
@@ -107,44 +101,52 @@ namespace Film_API.Controllers
             return NoContent();
         }
 
-        // POST: api/Movies
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Movie>> PostMovie(Movie movie)
+        public async Task<ActionResult<MoviePostDTO>> PostMovie(MoviePostDTO dto)
         {
-          //if (_context.Movies == null)
-          //{
-          //    return Problem("Entity set 'FilmDbContext.Movies'  is null.");
-          //}
-          //  _context.Movies.Add(movie);
-          //  await _context.SaveChangesAsync();
+            // Do properly with AutoMapper
+            HashSet<Character> characters = new HashSet<Character>(await _movieService.GetCharacterArrayFromIdArray(dto.Characters));
+            Movie movie = new()
+            {
+                Id = 0,
+                Title = dto.Title,
+                Genre = dto.Genre,
+                ReleaseYear = dto.ReleaseYear,
+                Director = dto.Director,
+                Picture = dto.Picture,
+                Trailer = dto.Trailer,
+                FranchiseId = dto.FranchiseId,
+                Characters = characters // The mapper can ignore this and set it to null. Then I can use a separate method for setting characters afterwards.
+            };
 
-            return CreatedAtAction("GetMovie", new { id = movie.Id }, movie);
+            // add via service
+            Movie created = await _movieService.AddAsync(movie);
+
+            // Do properly with AutoMapper
+            MoviePostDTO createdDTO = new(created.Title, created.Genre, created.ReleaseYear, created.Director, created.Picture, created.Trailer, created.FranchiseId, created.Characters.Select(c => c.Id).ToArray());
+
+            return CreatedAtAction(nameof(GetMovie), new {id = created.Id }, createdDTO);
         }
 
-        // DELETE: api/Movies/5
+        /// <summary>
+        /// Deletes the movie with the given id.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMovie(int id)
         {
-            //if (_context.Movies == null)
-            //{
-            //    return NotFound();
-            //}
-            //var movie = await _context.Movies.FindAsync(id);
-            //if (movie == null)
-            //{
-            //    return NotFound();
-            //}
-
-            //_context.Movies.Remove(movie);
-            //await _context.SaveChangesAsync();
-
+            try
+            {
+                await _movieService.DeleteByIdAsync(id);
+            }
+            catch (EntityNotFoundException Ex)
+            {
+                return NotFound(Ex.Message);
+            }
+           
             return NoContent();
         }
 
-        private bool MovieExists(int id)
-        {
-            return false; //(_context.Movies?.Any(e => e.Id == id)).GetValueOrDefault();
-        }
     }
 }

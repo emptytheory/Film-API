@@ -41,6 +41,7 @@ namespace Film_API
             });
             builder.Services.AddDbContext<FilmDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("Film")));
             builder.Services.AddScoped<IMovieService, MovieService>();
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             var app = builder.Build();
 
