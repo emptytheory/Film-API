@@ -1,5 +1,7 @@
 ﻿using Film_API.Data;
 using Film_API.Data.Entities;
+using Film_API.Data.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Film_API.Services.Characters
 {
@@ -12,29 +14,79 @@ namespace Film_API.Services.Characters
             _context = context;
         }
 
-        public Task<Character> AddAsync(Character entity)
+        public async Task<Character> AddAsync(Character character)
         {
-            throw new NotImplementedException();
+            await _context.Characters.AddAsync(character);
+            await _context.SaveChangesAsync();
+            return character;
         }
 
-        public Task DeleteByIdAsync(int id)
+        public async Task DeleteByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            Character? character = await _context.Characters.FindAsync(id);
+            if (character == null)
+                throw new EntityNotFoundException(nameof(Character), id);
+
+            _context.Characters.Remove(character);
+            await _context.SaveChangesAsync();
         }
 
-        public Task<ICollection<Character>> GetAllAsync()
+        public async Task<ICollection<Character>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Characters.ToListAsync();
         }
 
-        public Task<Character> GetByIdAsync(int id)
+        public async Task<Character> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            var character = await _context.Characters
+                .Include(c => c.Movies)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (character is null)
+                throw new EntityNotFoundException(nameof(Character), id);
+
+            return character;
         }
 
-        public Task<Character> UpdateAsync(Character entity)
+        public async Task<IEnumerable<Character>> GetCharactersByMovieIdAsync(int movieId)
         {
-            throw new NotImplementedException();
+            Movie? movie = await _context.Movies
+                .Include(m => m.Characters)
+                .FirstOrDefaultAsync(m => m.Id == movieId);
+
+            if (movie is null)
+                throw new EntityNotFoundException(nameof(Movie), movieId);
+
+            return movie.Characters;
+        }
+
+        public async Task<Character> UpdateAsync(Character character)
+        {
+            _context.Entry(character).State = EntityState.Modified;
+
+            if (_context.SaveChanges() <= 0)
+                throw new NoEffectUpdateException(nameof(Character), character.Id);
+
+            return character;
+        }
+
+        public async Task<Character> UpdateMoviesAsync(int[] movieIds, int characterId)
+        {
+            Character? character = await _context.Characters.FindAsync(characterId);
+
+            if (character is null)
+                throw new EntityNotFoundException(nameof(Character), characterId);
+
+            HashSet<Movie> movies = new(await _context.Movies.Where(m => movieIds.Contains(m.Id)).ToArrayAsync());
+
+            character.Movies = movies;
+
+            _context.Entry(character).State = EntityState.Modified;
+
+            if (_context.SaveChanges() <= 0)
+                throw new NoEffectUpdateException(nameof(Character), character.Id);
+
+            return character;
         }
     }
 }

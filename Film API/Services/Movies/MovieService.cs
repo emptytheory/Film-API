@@ -72,7 +72,7 @@ namespace Film_API.Services.Movies
 
         public async Task<Movie> UpdateCharactersAsync(int[] characterIds, int movieId)
         {
-            Movie movie = await _context.Movies.FindAsync(movieId);
+            Movie? movie = await _context.Movies.FindAsync(movieId);
 
             if (movie is null)
                 throw new EntityNotFoundException(nameof(Movie), movieId);
