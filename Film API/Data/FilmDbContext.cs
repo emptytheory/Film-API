@@ -14,6 +14,12 @@ namespace Film_API.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<Movie>()
+                .HasOne(m => m.Franchise)
+                .WithMany(f => f.Movies)
+                .HasForeignKey(m => m.FranchiseId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             Franchise franchise1 = new() { Id = 1, Name = "HATE CRIME Apes", Description = "Hero Apes Try to End Crime. Criminals and minorities alike fear the 'HATE CRIME Apes'." };
             Franchise franchise2 = new() { Id = 2, Name = "Disaster Fish" };
 
@@ -28,7 +34,7 @@ namespace Film_API.Data
             modelBuilder.Entity<Character>().HasData(character1, character2, character3);
             modelBuilder.Entity<Movie>().HasData(movie1, movie2, movie3);
             modelBuilder.Entity<Franchise>().HasData(franchise1, franchise2);
-
+                        
             modelBuilder.Entity<Movie>()
             .HasMany(std => std.Characters)
             .WithMany(sub => sub.Movies)

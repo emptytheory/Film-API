@@ -2,7 +2,7 @@
 using Film_API.Data.Entities;
 using Film_API.Services.Movies;
 using Film_API.Data.Exceptions;
-using Film_API.Data.DTOs.Movie;
+using Film_API.Data.DTOs.Movies;
 using System.Net.Mime;
 using AutoMapper;
 
@@ -32,19 +32,27 @@ namespace Film_API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<MovieBriefDTO>>> GetMovies(int? franchiseId = null)
         {
-            IEnumerable<Movie> movieList;
+            try
+            {
+                IEnumerable<Movie> movieList;
 
-            if (franchiseId is null)
-            {
-                movieList = await _movieService.GetAllAsync();
+                if (franchiseId is null)
+                {
+                    movieList = await _movieService.GetAllAsync();
+                }
+                else
+                {
+                    movieList = await _movieService.GetMoviesByFranchiseIdAsync(franchiseId.Value);
+                }
+
+                var dtoList = _mapper.Map<IEnumerable<MovieBriefDTO>>(movieList);
+                return Ok(dtoList);
             }
-            else
+            catch (EntityNotFoundException Ex)
             {
-                movieList = await _movieService.GetMoviesByFranchiseIdAsync(franchiseId.Value);
+                return NotFound(Ex.Message);
             }
             
-            var dtoList = _mapper.Map<IEnumerable<MovieBriefDTO>>(movieList);
-            return Ok(dtoList);
         }
 
         /// <summary>
@@ -71,7 +79,7 @@ namespace Film_API.Controllers
         }
 
         /// <summary>
-        /// Updates the movie with the given id with data from the given DTO.
+        /// Updates the movie having the given id with data from the given DTO.
         /// Does nothing if no movie has the given id.
         /// </summary>
         /// <param name="id"></param>
@@ -137,16 +145,9 @@ namespace Film_API.Controllers
         [HttpPost]
         public async Task<ActionResult<MoviePostDTO>> PostMovie(MoviePostDTO dto)
         {
-
-            // map
             Movie movie = _mapper.Map<Movie>(dto);
-
-            // add via service
             Movie created = await _movieService.AddAsync(movie);
-
-            // map back
             MoviePostDTO createdDTO = _mapper.Map<MoviePostDTO>(movie);
-
             return CreatedAtAction(nameof(GetMovie), new {id = created.Id }, createdDTO);
         }
 

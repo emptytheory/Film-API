@@ -1,5 +1,7 @@
 
 using Film_API.Data;
+using Film_API.Services.Characters;
+using Film_API.Services.Franchises;
 using Film_API.Services.Movies;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -40,7 +42,11 @@ namespace Film_API
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
             });
             builder.Services.AddDbContext<FilmDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("Film")));
+
             builder.Services.AddScoped<IMovieService, MovieService>();
+            builder.Services.AddScoped<ICharacterService, CharacterService>();
+            builder.Services.AddScoped<IFranchiseService, FranchiseService>();
+
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
             var app = builder.Build();

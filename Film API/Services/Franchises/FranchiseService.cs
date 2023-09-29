@@ -2,6 +2,7 @@
 using Film_API.Data.Entities;
 using Film_API.Data.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Packaging;
 
 namespace Film_API.Services.Franchises
 {
@@ -61,14 +62,17 @@ namespace Film_API.Services.Franchises
 
         public async Task<Franchise> UpdateMoviesAsync(int[] movieIds, int franchiseId)
         {
-            Franchise? franchise = await _context.Franchises.FindAsync(franchiseId);
+            Franchise? franchise = await _context.Franchises
+                .Include(f => f.Movies)
+                .FirstOrDefaultAsync(f => f.Id == franchiseId);
 
             if (franchise is null)
                 throw new EntityNotFoundException(nameof(Franchise), franchiseId);
 
-            HashSet<Movie> movies = new(await _context.Movies.Where(m => movieIds.Contains(m.Id)).ToArrayAsync());
+            var movies = await _context.Movies.Where(m => movieIds.Contains(m.Id)).ToArrayAsync();
 
-            franchise.Movies = movies;
+            franchise.Movies.Clear();
+            franchise.Movies.AddRange(movies);
 
             _context.Entry(franchise).State = EntityState.Modified;
 
