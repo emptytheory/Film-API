@@ -22,5 +22,16 @@ namespace Film_API.Data.Entities
 
         // Navigation
         public HashSet<Movie> Movies { get; set; }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Character character &&
+                   Id == character.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id);
+        }
     }
 }

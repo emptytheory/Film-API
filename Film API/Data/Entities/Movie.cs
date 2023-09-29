@@ -31,5 +31,16 @@ namespace Film_API.Data.Entities
         // Navigation
         public Franchise? Franchise { get; set; }
         public HashSet<Character> Characters { get; set; }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is Movie movie &&
+                   Id == movie.Id;
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Id);
+        }
     }
 }
