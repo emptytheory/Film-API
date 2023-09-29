@@ -95,7 +95,7 @@ namespace Film_API.Controllers
             {
                 return NotFound(Ex.Message);
             }
-            catch (NoEffectUpdateException Ex)
+            catch (NoRowsAffectedException Ex)
             {
                 return StatusCode(204, Ex.Message);
             }
@@ -120,7 +120,7 @@ namespace Film_API.Controllers
             {
                 return NotFound(Ex.Message);
             }
-            catch (NoEffectUpdateException Ex)
+            catch (NoRowsAffectedException Ex)
             {
                 return StatusCode(204, Ex.Message);
             }
