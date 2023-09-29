@@ -4,8 +4,9 @@ namespace Film_API.Services.Movies
 {
     public interface IMovieService : ICrudService<Movie, int>
     {
-        Movie UpdateCharacters(int[] characterIds, int movieId);
+        Task<Movie> UpdateCharactersAsync(int[] characterIds, int movieId);
 
-        Task<Character[]> GetCharacterArrayFromIdArray(int[] idArray);
+        Task<IEnumerable<Movie>> GetMoviesByFranchiseIdAsync(int franchiseId);
+        // Task<Character[]> GetCharacterArrayFromIdArray(int[] idArray);
     }
 }

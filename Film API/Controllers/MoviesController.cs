@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Film_API.Data;
+﻿using Microsoft.AspNetCore.Mvc;
 using Film_API.Data.Entities;
 using Film_API.Services.Movies;
 using Film_API.Data.Exceptions;
@@ -34,14 +27,23 @@ namespace Film_API.Controllers
         /// <summary>
         /// Get all movies.
         /// </summary>
+        /// <param name="franchiseId">Pass a franchiseId to include only movies in that franchise.</param>
         /// <returns></returns>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MovieBriefDTO>>> GetMovies()
+        public async Task<ActionResult<IEnumerable<MovieBriefDTO>>> GetMovies(int? franchiseId = null)
         {
-            var movieList = await _movieService.GetAllAsync();
+            IEnumerable<Movie> movieList;
 
+            if (franchiseId is null)
+            {
+                movieList = await _movieService.GetAllAsync();
+            }
+            else
+            {
+                movieList = await _movieService.GetMoviesByFranchiseIdAsync(franchiseId.Value);
+            }
+            
             var dtoList = _mapper.Map<IEnumerable<MovieBriefDTO>>(movieList);
-
             return Ok(dtoList);
         }
 
@@ -101,29 +103,49 @@ namespace Film_API.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Replaces the characters of the movie having the given id with the characters whose ids are given. 
+        /// </summary>
+        /// <param name="characterIds">CharacterIds not in the database and repeat ids are ignored.</param>
+        /// <param name="id">Id of the movie.</param>
+        /// <returns></returns>
+        [HttpPut("{id}/characters")]
+        public async Task<IActionResult> UpdateMovieCharacters(int[] characterIds, int id)
+        {
+            try
+            {
+                await _movieService.UpdateCharactersAsync(characterIds, id);
+            }
+            catch (EntityNotFoundException Ex)
+            {
+                return NotFound(Ex.Message);
+            }
+            catch (NoEffectUpdateException Ex)
+            {
+                return StatusCode(204, Ex.Message);
+            }
+
+            return NoContent();
+        }
+
+
+        /// <summary>
+        /// Create a new movie.
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<ActionResult<MoviePostDTO>> PostMovie(MoviePostDTO dto)
         {
-            // Do properly with AutoMapper
-            HashSet<Character> characters = new HashSet<Character>(await _movieService.GetCharacterArrayFromIdArray(dto.Characters));
-            Movie movie = new()
-            {
-                Id = 0,
-                Title = dto.Title,
-                Genre = dto.Genre,
-                ReleaseYear = dto.ReleaseYear,
-                Director = dto.Director,
-                Picture = dto.Picture,
-                Trailer = dto.Trailer,
-                FranchiseId = dto.FranchiseId,
-                Characters = characters // The mapper can ignore this and set it to null. Then I can use a separate method for setting characters afterwards.
-            };
+
+            // map
+            Movie movie = _mapper.Map<Movie>(dto);
 
             // add via service
             Movie created = await _movieService.AddAsync(movie);
 
-            // Do properly with AutoMapper
-            MoviePostDTO createdDTO = new(created.Title, created.Genre, created.ReleaseYear, created.Director, created.Picture, created.Trailer, created.FranchiseId, created.Characters.Select(c => c.Id).ToArray());
+            // map back
+            MoviePostDTO createdDTO = _mapper.Map<MoviePostDTO>(movie);
 
             return CreatedAtAction(nameof(GetMovie), new {id = created.Id }, createdDTO);
         }

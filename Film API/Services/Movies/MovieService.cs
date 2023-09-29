@@ -34,7 +34,12 @@ namespace Film_API.Services.Movies
 
         public async Task<ICollection<Movie>> GetAllAsync()
         {
-            return await _context.Movies.ToListAsync<Movie>();
+            return await _context.Movies.ToListAsync();
+        }
+
+        public async Task<IEnumerable<Movie>> GetMoviesByFranchiseIdAsync(int franchiseId)
+        {
+            return await _context.Movies.Where(m => m.FranchiseId == franchiseId).ToListAsync();
         }
 
         /// <summary>
@@ -65,14 +70,28 @@ namespace Film_API.Services.Movies
             return movie;
         }
 
-        public Movie UpdateCharacters(int[] characterIds, int movieId)
+        public async Task<Movie> UpdateCharactersAsync(int[] characterIds, int movieId)
         {
-            throw new NotImplementedException();
+            Movie movie = await _context.Movies.FindAsync(movieId);
+
+            if (movie is null)
+                throw new EntityNotFoundException(nameof(Movie), movieId);
+
+            HashSet<Character> characters = new(await _context.Characters.Where(c => characterIds.Contains(c.Id)).ToArrayAsync());
+
+            movie.Characters = characters;
+
+            _context.Entry(movie).State = EntityState.Modified;
+
+            if (_context.SaveChanges() <= 0)
+                throw new NoEffectUpdateException(nameof(Movie), movie.Id);
+
+            return movie;
         }
 
-        public async Task<Character[]> GetCharacterArrayFromIdArray(int[] idArray) 
-        {
-            return await _context.Characters.Where(c => idArray.Contains(c.Id)).ToArrayAsync();
-        }
+        //public async Task<Character[]> GetCharacterArrayFromIdArray(int[] idArray) 
+        //{
+        //    return await _context.Characters.Where(c => idArray.Contains(c.Id)).ToArrayAsync();
+        //}
     }
 }

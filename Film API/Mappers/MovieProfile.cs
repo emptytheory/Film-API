@@ -16,6 +16,8 @@ namespace Film_API.Mappers
 
             CreateMap<MoviePutDTO, Movie>();
 
+            CreateMap<MoviePostDTO, Movie>().ReverseMap();
+
         }
     }
 }
