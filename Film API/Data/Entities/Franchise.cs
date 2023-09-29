@@ -12,7 +12,7 @@ namespace Film_API.Data.Entities
         public string Name { get; set; }
 
         [StringLength(500)]
-        public string Description { get; set; }
+        public string? Description { get; set; }
 
         // Navigation
         public HashSet<Movie> Movies { get; set; }
