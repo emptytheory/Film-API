@@ -25,7 +25,7 @@ namespace Film_API.Services.Movies
         public async Task DeleteByIdAsync(int id)
         {
             Movie? movie = await _context.Movies.FindAsync(id);
-            if (movie == null)
+            if (movie is null)
                 throw new EntityNotFoundException(nameof(Movie), id);
 
             _context.Movies.Remove(movie);
@@ -64,8 +64,8 @@ namespace Film_API.Services.Movies
         {
             _context.Entry(movie).State = EntityState.Modified;
             
-            if (_context.SaveChanges() <= 0)
-                throw new NoEffectUpdateException(nameof(Movie), movie.Id);
+            if (await _context.SaveChangesAsync() <= 0)
+                throw new NoRowsAffectedException(nameof(Movie), movie.Id);
 
             return movie;
         }
@@ -83,8 +83,8 @@ namespace Film_API.Services.Movies
 
             _context.Entry(movie).State = EntityState.Modified;
 
-            if (_context.SaveChanges() <= 0)
-                throw new NoEffectUpdateException(nameof(Movie), movie.Id);
+            if (await _context.SaveChangesAsync() <= 0)
+                throw new NoRowsAffectedException(nameof(Movie), movie.Id);
 
             return movie;
         }

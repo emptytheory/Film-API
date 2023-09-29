@@ -7,6 +7,5 @@ namespace Film_API.Services.Movies
         Task<Movie> UpdateCharactersAsync(int[] characterIds, int movieId);
 
         Task<IEnumerable<Movie>> GetMoviesByFranchiseIdAsync(int franchiseId);
-        // Task<Character[]> GetCharacterArrayFromIdArray(int[] idArray);
     }
 }

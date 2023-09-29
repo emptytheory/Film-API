@@ -24,7 +24,7 @@ namespace Film_API.Services.Characters
         public async Task DeleteByIdAsync(int id)
         {
             Character? character = await _context.Characters.FindAsync(id);
-            if (character == null)
+            if (character is null)
                 throw new EntityNotFoundException(nameof(Character), id);
 
             _context.Characters.Remove(character);
@@ -48,6 +48,21 @@ namespace Film_API.Services.Characters
             return character;
         }
 
+        public async Task<IEnumerable<Character>> GetCharactersByFranchiseIdAsync(int franchiseId)
+        {
+            Franchise? franchise = await _context.Franchises
+                .Include(f => f.Movies)
+                .ThenInclude(m => m.Characters)
+                .FirstOrDefaultAsync(f => f.Id == franchiseId);
+
+            if (franchise is null)
+                throw new EntityNotFoundException(nameof(Franchise), franchiseId);
+
+            var characters = franchise.Movies.SelectMany(m => m.Characters).Distinct();
+
+            return characters;
+        }
+
         public async Task<IEnumerable<Character>> GetCharactersByMovieIdAsync(int movieId)
         {
             Movie? movie = await _context.Movies
@@ -64,8 +79,8 @@ namespace Film_API.Services.Characters
         {
             _context.Entry(character).State = EntityState.Modified;
 
-            if (_context.SaveChanges() <= 0)
-                throw new NoEffectUpdateException(nameof(Character), character.Id);
+            if (await _context.SaveChangesAsync() <= 0)
+                throw new NoRowsAffectedException(nameof(Character), character.Id);
 
             return character;
         }
@@ -83,8 +98,8 @@ namespace Film_API.Services.Characters
 
             _context.Entry(character).State = EntityState.Modified;
 
-            if (_context.SaveChanges() <= 0)
-                throw new NoEffectUpdateException(nameof(Character), character.Id);
+            if (await _context.SaveChangesAsync() <= 0)
+                throw new NoRowsAffectedException(nameof(Character), character.Id);
 
             return character;
         }

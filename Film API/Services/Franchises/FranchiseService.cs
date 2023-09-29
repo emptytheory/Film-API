@@ -1,5 +1,7 @@
 ﻿using Film_API.Data;
 using Film_API.Data.Entities;
+using Film_API.Data.Exceptions;
+using Microsoft.EntityFrameworkCore;
 
 namespace Film_API.Services.Franchises
 {
@@ -12,34 +14,68 @@ namespace Film_API.Services.Franchises
             _context = context;
         }
 
-        public Task<Franchise> AddAsync(Franchise entity)
+        public async Task<Franchise> AddAsync(Franchise franchise)
         {
-            throw new NotImplementedException();
+            await _context.Franchises.AddAsync(franchise);
+            await _context.SaveChangesAsync();
+            return franchise;
         }
 
-        public Task DeleteByIdAsync(int id)
+        public async Task DeleteByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            Franchise? franchise = await _context.Franchises.FindAsync(id);
+            
+            if (franchise is null)
+                throw new EntityNotFoundException(nameof(Franchise), id);
+
+            _context.Franchises.Remove(franchise);
+            await _context.SaveChangesAsync();
         }
 
-        public Task<ICollection<Franchise>> GetAllAsync()
+        public async Task<ICollection<Franchise>> GetAllAsync()
         {
-            throw new NotImplementedException();
+            return await _context.Franchises.ToListAsync();
         }
 
-        public Task<Franchise> GetByIdAsync(int id)
+        public async Task<Franchise> GetByIdAsync(int id)
         {
-            throw new NotImplementedException();
+            Franchise? franchise = await _context.Franchises
+                .Include(f => f.Movies)
+                .FirstOrDefaultAsync(f => f.Id == id);
+
+            if (franchise is null)
+                throw new EntityNotFoundException(nameof(Franchise), id);
+
+            return franchise;
         }
 
-        public Task<Franchise> UpdateAsync(Franchise entity)
+        public async Task<Franchise> UpdateAsync(Franchise franchise)
         {
-            throw new NotImplementedException();
+            _context.Entry(franchise).State = EntityState.Modified;
+
+            if (await _context.SaveChangesAsync() <= 0)
+                throw new NoRowsAffectedException(nameof(Franchise), franchise.Id);
+
+            return franchise;
         }
 
-        public Franchise UpdateMovies(int[] movieIds, int franchiseId)
+        public async Task<Franchise> UpdateMoviesAsync(int[] movieIds, int franchiseId)
         {
-            throw new NotImplementedException();
+            Franchise? franchise = await _context.Franchises.FindAsync(franchiseId);
+
+            if (franchise is null)
+                throw new EntityNotFoundException(nameof(Franchise), franchiseId);
+
+            HashSet<Movie> movies = new(await _context.Movies.Where(m => movieIds.Contains(m.Id)).ToArrayAsync());
+
+            franchise.Movies = movies;
+
+            _context.Entry(franchise).State = EntityState.Modified;
+
+            if (await _context.SaveChangesAsync() <= 0)
+                throw new NoRowsAffectedException(nameof(Franchise), franchise.Id);
+
+            return franchise;
         }
     }
 }
